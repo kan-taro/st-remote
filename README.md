@@ -3,8 +3,7 @@
 Bose SoundTouch シリーズを、デスクトップから最小限の操作でコントロールするための軽量リモコンアプリです。
 公式アプリの重快さに疲れた方や、シンプルな操作を好む方向けに作成しました。
 
-![ST-Remote Icon](https://github.com/あなたのユーザー名/st-remote/blob/main/build/icon.png?raw=true)
-*(※アイコンのパスは実際のGitHubのURLに合わせて適宜修正してください)*
+
 
 ## 概要
 
