@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ST Remote by ハイトキ！</title>
+    <style>
+        :root { --bg: #1e1e2e; --card: #282a36; --text: #f8f8f2; --accent: #bd93f9; --btn: #44475a; --btn-hover: #6272a4; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .dashboard { background: var(--card); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 500px; }
+        h1 { text-align: center; font-size: 1.5rem; margin-top: 0; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+        .power-btn { background: #ff5555; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        .section { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid #444; }
+        .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .section-title { font-size: 0.9rem; color: #8be9fd; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .settings-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .ip-input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #555; background: #191a21; color: white; }
+        .save-btn { background: #50fa7b; color: #282a36; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; padding: 0 15px; }
+
+        .now-playing-container { display: flex; gap: 15px; align-items: center; background: #191a21; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+        .album-art { width: 80px; height: 80px; background: #333; border-radius: 8px; object-fit: cover; }
+        .track-info { flex: 1; overflow: hidden; }
+        .track { font-size: 1.1rem; font-weight: bold; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .artist { font-size: 0.9rem; color: #bbb; }
+
+        .playback-controls { display: flex; justify-content: center; gap: 20px; margin-top: 10px; }
+        .playback-btn { background: #6272a4; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 1.2rem; }
+
+        .btn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        button { background: var(--btn); color: var(--text); border: none; padding: 12px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: var(--btn-hover); }
+        
+        .vol-controls { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+        input[type="range"] { flex: 1; cursor: pointer; accent-color: var(--accent); }
+        .vol-text { width: 35px; text-align: right; font-weight: bold; color: var(--accent); }
+        small { color: #888; display: block; margin-bottom: 5px; }
+        
+        .device-info { font-size: 0.8rem; color: #888; background: #191a21; padding: 10px; border-radius: 8px; font-family: monospace; text-align: center; }
+        .footer-link { text-align: center; margin-top: 25px; font-size: 0.85rem; }
+        .footer-link a { color: #8be9fd; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h1>
+        ST Remote
+        <button class="power-btn" onclick="sendKey('POWER')">電源</button>
+    </h1>
+
+    <div class="section">
+        <div class="section-title">Connection</div>
+        <div class="settings-row">
+            <input type="text" id="ip-address" class="ip-input" placeholder="スピーカーのIPアドレス">
+            <button class="save-btn" onclick="saveIP()">保存</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Now Playing</div>
+        <div class="now-playing-container">
+            <img id="album-art" class="album-art" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Art">
+            <div class="track-info">
+                <div id="status" style="font-size:0.8rem; color:#50fa7b; font-weight:bold; margin-bottom:5px;">OFFLINE</div>
+                <div id="track" class="track">---</div>
+                <div id="artist" class="artist">---</div>
+            </div>
+        </div>
+        <div class="playback-controls">
+            <button class="playback-btn" onclick="sendKey('PREV_TRACK')">⏮</button>
+            <button class="playback-btn" onclick="sendKey('PLAY_PAUSE')">⏯</button>
+            <button class="playback-btn" onclick="sendKey('NEXT_TRACK')">⏭</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Audio Control</div>
+        <small>Master Volume</small>
+        <div class="vol-controls">
+            <button onclick="changeVolume(-5)">－</button>
+            <input type="range" id="vol-slider" min="0" max="100" value="0" 
+                onmousedown="isAdjustingVol=true" onmouseup="isAdjustingVol=false"
+                oninput="document.getElementById('vol-text').innerText=this.value" 
+                onchange="setVolume(this.value)">
+            <button onclick="changeVolume(5)">＋</button>
+            <div id="vol-text" class="vol-text">0</div>
+        </div>
+
+        <small>Bass Level</small>
+        <div class="vol-controls">
+            <span>Min</span>
+            <input type="range" id="bass-slider" min="-9" max="0" value="0" 
+                onmousedown="isAdjustingBass=true" onmouseup="isAdjustingBass=false"
+                oninput="document.getElementById('bass-text').innerText=this.value" 
+                onchange="setBass(this.value)">
+            <div id="bass-text" class="vol-text">0</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Source</div>
+        <div class="btn-grid">
+            <button onclick="setSource('BLUETOOTH')">Bluetooth</button>
+            <button onclick="setSource('AUX')">AUX入力</button>
+            <button onclick="setSource('INTERNET_RADIO')">Wi-Fi</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Presets</div>
+        <div class="btn-grid" id="preset-grid">
+            <button onclick="sendKey('PRESET_1')" id="pre1">1</button>
+            <button onclick="sendKey('PRESET_2')" id="pre2">2</button>
+            <button onclick="sendKey('PRESET_3')" id="pre3">3</button>
+            <button onclick="sendKey('PRESET_4')" id="pre4">4</button>
+            <button onclick="sendKey('PRESET_5')" id="pre5">5</button>
+            <button onclick="sendKey('PRESET_6')" id="pre6">6</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div id="sys-info" class="device-info">IPアドレスを設定してください</div>
+    </div>
+
+    <div class="footer-link">
+        Presented by <a href="https://www.haitoki.com" target="_blank" rel="noopener noreferrer">ハイトキ！</a>
+    </div>
+</div>
+
+<script>
+    let currentIP = localStorage.getItem('soundtouch_ip') || '';
+    let BASE_URL = currentIP ? `http://${currentIP}:8090` : '';
+    let currentVol = 0;
+    let currentBass = 0;
+    let isAdjustingVol = false;
+    let isAdjustingBass = false;
+    let updateInterval;
+
+    if (currentIP) {
+        document.getElementById('ip-address').value = currentIP;
+        startUpdates();
+    }
+
+    function saveIP() {
+        const ip = document.getElementById('ip-address').value.trim();
+        if (!ip) return;
+        currentIP = ip;
+        BASE_URL = `http://${currentIP}:8090`;
+        localStorage.setItem('soundtouch_ip', currentIP);
+        startUpdates();
+    }
+
+    async function sendPost(path, xml) {
+        if (!BASE_URL) return;
+        try {
+            await fetch(BASE_URL + path, { method: 'POST', body: xml });
+            setTimeout(updateAll, 500);
+        } catch(e) {}
+    }
+
+    function sendKey(key) {
+        sendPost('/key', `<key state="press" sender="Gabbo">${key}</key>`);
+        setTimeout(() => sendPost('/key', `<key state="release" sender="Gabbo">${key}</key>`), 100);
+    }
+
+    function setSource(src) {
+        sendPost('/select', `<ContentItem source="${src}" sourceAccount=""></ContentItem>`);
+    }
+
+    // ボリューム操作
+    function setVolume(val) {
+        currentVol = parseInt(val);
+        sendPost('/volume', `<volume>${currentVol}</volume>`);
+    }
+
+    function changeVolume(diff) {
+        let n = Math.min(Math.max(currentVol + diff, 0), 100);
+        document.getElementById('vol-slider').value = n;
+        document.getElementById('vol-text').innerText = n;
+        setVolume(n);
+    }
+
+    // 低音操作
+    function setBass(val) {
+        currentBass = parseInt(val);
+        sendPost('/bass', `<bass>${currentBass}</bass>`);
+    }
+
+    async function getXML(path) {
+        if (!BASE_URL) return null;
+        try {
+            const res = await fetch(BASE_URL + path);
+            const text = await res.text();
+            return new DOMParser().parseFromString(text, "text/xml");
+        } catch(e) { return null; }
+    }
+
+    async function updateAll() {
+        // 再生情報更新
+        const npXml = await getXML('/now_playing');
+        if (npXml) {
+            const source = npXml.documentElement.getAttribute('source');
+            const track = npXml.getElementsByTagName('track')[0]?.textContent || (source === "STANDBY" ? "STANDBY" : "---");
+            const artist = npXml.getElementsByTagName('artist')[0]?.textContent || "";
+            const art = npXml.getElementsByTagName('art')[0]?.textContent;
+            
+            document.getElementById('status').innerText = source;
+            document.getElementById('track').innerText = track;
+            document.getElementById('artist').innerText = artist;
+            if (art) document.getElementById('album-art').src = art;
+        }
+
+        // ボリューム同期（操作中でないとき）
+        if (!isAdjustingVol) {
+            const volXml = await getXML('/volume');
+            if (volXml) {
+                const v = volXml.getElementsByTagName('targetvolume')[0] || volXml.getElementsByTagName('actualvolume')[0];
+                if (v) {
+                    currentVol = parseInt(v.textContent);
+                    document.getElementById('vol-slider').value = currentVol;
+                    document.getElementById('vol-text').innerText = currentVol;
+                }
+            }
+        }
+
+        // 低音同期（操作中でないとき）
+        if (!isAdjustingBass) {
+            const bassXml = await getXML('/bass');
+            if (bassXml) {
+                const b = bassXml.getElementsByTagName('targetbass')[0] || bassXml.getElementsByTagName('actualbass')[0];
+                if (b) {
+                    currentBass = parseInt(b.textContent);
+                    document.getElementById('bass-slider').value = currentBass;
+                    document.getElementById('bass-text').innerText = currentBass;
+                }
+            }
+        }
+
+        const infoXml = await getXML('/info');
+        if (infoXml) {
+            const name = infoXml.getElementsByTagName('name')[0]?.textContent;
+            document.getElementById('sys-info').innerText = `${name} (${currentIP})`;
+        }
+    }
+
+    async function updatePresets() {
+        const xml = await getXML('/presets');
+        if (xml) {
+            const presets = xml.getElementsByTagName('preset');
+            for (let p of presets) {
+                const id = p.getAttribute('id');
+                const name = p.getElementsByTagName('itemName')[0]?.textContent;
+                const btn = document.getElementById(`pre${id}`);
+                if (btn) btn.innerText = `${id}: ${name}`;
+            }
+        }
+    }
+
+    function startUpdates() {
+        clearInterval(updateInterval);
+        updatePresets();
+        updateAll();
+        updateInterval = setInterval(updateAll, 3000);
+    }
+</script>
+</body>
+</html>

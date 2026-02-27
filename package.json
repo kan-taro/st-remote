@@ -1,0 +1,29 @@
+{
+  "name": "st-remote",
+  "version": "1.0.0",
+  "description": "Bose SoundTouch Remote Controller",
+  "author": "haitoki",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.haitoki.st-remote",
+    "productName": "ST-Remote",
+    "mac": {
+      "target": ["dmg"],
+      "icon": "build/icon.icns",
+      "identity": null, 
+      "hardenedRuntime": false
+    },
+    "win": {
+      "target": "portable",
+      "icon": "build/icon.ico"
+    }
+  }
+}
