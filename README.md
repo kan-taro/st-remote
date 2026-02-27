@@ -22,7 +22,7 @@ Bose 公式による SoundTouch シリーズのサポートは **2026年5月** �
 
 ## インストール方法
 
-本リポジトリの [Releases](https://github.com/あなたのユーザー名/st-remote/releases) ページから、お使いの環境に合わせたバイナリをダウンロードしてください。
+本リポジトリの [Releases](https://github.com/kan-taro/st-remote/releases) ページから、お使いの環境に合わせたバイナリをダウンロードしてください。
 
 - **Windows**: `ST-Remote-Portable-1.0.0.exe` (インストール不要で実行可能)
 - **Mac**: `ST-Remote-1.0.0.dmg` (M1/M2/M3/M4チップに最適化済み)
